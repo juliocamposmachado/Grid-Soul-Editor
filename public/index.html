@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#020a18">
+<meta name="description" content="GRID SOUL CYBER OCEAN: criações 3D locais em malhas triangulares conectadas.">
+<title>GRID SOUL — CYBER OCEAN</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#020711;color:#e6faff;font:14px system-ui}
+header{padding:15px 20px;border-bottom:1px solid #16374b}
+h1{font-size:19px;letter-spacing:4px;color:#48f5ff;margin:0}
+header p{color:#87a9bd;margin:5px 0 0}
+main{display:grid;grid-template-columns:minmax(0,1fr) 310px;height:calc(100vh - 65px);min-height:620px}
+#stage{position:relative;min-height:620px;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+#hint{position:absolute;bottom:12px;left:14px;color:#86b8ca;pointer-events:none}
+aside{background:#081422;border-left:1px solid #16374b;padding:18px;overflow:auto;min-height:0}
+h2{font-size:12px;letter-spacing:2px;color:#48f5ff}
+textarea{width:100%;resize:vertical;background:#030b16;color:#e6faff;border:1px solid #24536a;border-radius:7px;padding:10px}
+button{width:100%;padding:11px;border:1px solid #23677e;border-radius:7px;background:#07536a;color:white;cursor:pointer;font-weight:700}
+button:disabled{opacity:.5}
+#openShowcase{margin-top:8px;background:#092636;border-color:#268094}
+label{display:block;margin:16px 0 6px;color:#9bb9ca;font-size:12px}
+input{width:100%;accent-color:#48f5ff}
+small,#reply{color:#9bb9ca;line-height:1.7;overflow-wrap:anywhere}
+small,#reply{color:#9bb9ca;line-height:1.7;overflow-wrap:anywhere}
+#reply{white-space:pre-wrap;max-height:180px;overflow:auto}
+.stats{margin-top:20px;padding-top:15px;border-top:1px solid #1b3548}
+select{width:100%;padding:9px;background:#030b16;color:#e6faff;border:1px solid #24536a;border-radius:6px}
+#visualExamples,#visualCalibration,#visualHelp{margin-top:14px;padding-top:11px;border-top:1px solid #1b3548}
+#visualExamples p,.visual-calibration-note,.visual-help-answer{color:#9bb9ca;font-size:11px;line-height:1.55}
+.visual-example-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.visual-example{padding:8px;text-align:left;background:#092636;border-color:#23677e;font-size:11px}
+.visual-example strong,.visual-example small{display:block}.visual-example small{margin-top:3px;font-size:9px;font-weight:400;color:#a8c5d0;line-height:1.35}
+#visualCalibration label.visual-auto-label{display:flex;align-items:center;gap:8px;margin:5px 0;color:#e5faff;font-size:12px;font-weight:700}
+#visualAuto{width:auto;margin:0;accent-color:#48f5ff}
+#visualRecalibrate{margin-top:5px;padding:8px;font-size:11px;background:#063b4c;border-color:#35d8ee}
+#visualCalibrationStatus{display:block;margin-top:6px;color:#80dfed;font-size:10px;line-height:1.5}
+#visualHelp summary{color:#8eefff;cursor:pointer;font-weight:700;font-size:12px}
+.visual-help-item{margin-top:9px;padding-top:8px;border-top:1px solid #152e40}
+.visual-help-item h3{margin:0;color:#d9faff;font-size:11px}
+#editorOpen{margin:10px 0 4px;background:#07536a;border-color:#48f5ff}
+#sceneEditorPanel[hidden]{display:none!important}
+#sceneEditorPanel{position:fixed;z-index:30;top:76px;right:12px;width:min(370px,calc(100vw - 24px));max-height:calc(100vh - 90px);overflow:auto;padding:12px;background:#06111ff7;border:1px solid #35d8ee;border-radius:10px;box-shadow:0 10px 36px #000b;backdrop-filter:blur(12px);font-size:11px}
+.editor-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-head h2{margin:0}.editor-head button{width:auto;padding:6px 9px}
+.editor-toolbar,.editor-add-grid,.editor-mode-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:8px 0}
+.editor-toolbar button,.editor-add-grid button,.editor-mode-row button{padding:7px 4px;font-size:10px;background:#092636}
+.editor-mode-row button[aria-pressed="true"]{border-color:#48f5ff;box-shadow:inset 0 -2px #48f5ff}
+.editor-section{margin-top:9px;padding-top:8px;border-top:1px solid #1b3548}.editor-section h3{margin:2px 0 7px;color:#48f5ff;font-size:10px;letter-spacing:1px}
+#editorTree{display:grid;gap:4px;max-height:130px;overflow:auto}.editor-tree-item{text-align:left;padding:6px;background:#071827;font-size:10px}.editor-tree-item[aria-pressed="true"]{border-color:#48f5ff}.editor-tree-static{padding:5px;color:#8bdde7;font-size:10px}
+#editorInspector{display:grid;grid-template-columns:1fr 1fr;gap:5px}.editor-inspector-title{grid-column:1/-1;color:#9bb9ca;font-size:10px}
+#editorInspector label{margin:2px 0;font-size:9px}#editorInspector input[type=number]{width:100%;padding:5px;background:#030b16;color:#e6faff;border:1px solid #24536a;border-radius:4px;font-size:10px}#editorInspector input[type=color]{height:28px}
+.editor-inline{display:flex;align-items:center;gap:6px;margin:5px 0}.editor-inline input{width:auto}.editor-inline label{margin:0!important}
+#editorAiPrompt{min-height:52px;font-size:10px}#editorStatus{display:block;margin-top:7px;padding:7px;background:#071827;color:#9feaf1;font-size:9px;line-height:1.5}
+#chemistry-tools{margin-top:18px;padding-top:14px;border-top:1px solid #1b3548}
+#chemistry-tools details{margin-top:10px}
+#chemistry-tools summary{color:#8eefff;cursor:pointer;font-weight:700}
+.periodic-wrap{max-width:100%;padding:5px 0 10px}
+.periodic-grid{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));grid-auto-rows:30px;gap:2px;width:100%}
+.element-chip{width:100%;height:30px;min-width:0;padding:0;border:1px solid var(--element-color);border-radius:3px;background:linear-gradient(155deg,color-mix(in srgb,var(--element-color) 55%,#061522),#061522 82%);color:#f5fbff;text-shadow:0 1px 2px #000;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
+.element-chip strong{font-size:9px;letter-spacing:-.4px}
+.element-chip span{font-size:7px;color:#d3e5ef}
+.element-chip[aria-pressed="true"]{outline:2px solid #fff;outline-offset:1px;z-index:1}
+#focusNotice{display:block;margin:7px 0;color:#c6dce8}
+#clearElementFocus{margin-top:8px;padding:8px;font-size:11px}
+#automationToggle{margin-top:8px;background:#063b4c;border-color:#35d8ee}
+#automationPanel[hidden]{display:none!important}
+#automationPanel{position:fixed;z-index:10;right:12px;top:76px;width:min(470px,calc(100vw - 24px));max-height:calc(100vh - 90px);overflow:auto;padding:16px;background:#06111ff5;border:1px solid #1d6177;border-radius:12px;box-shadow:0 12px 50px #000b;backdrop-filter:blur(14px)}
+.auto-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #1b3548;padding-bottom:10px}
+.auto-head h2{margin:0}.auto-head button{width:auto;padding:6px 10px}
+.auto-warning{margin:10px 0;padding:9px;border:1px solid #745b26;border-radius:7px;background:#32270f;color:#f4dda2;font-size:12px;line-height:1.5}
+.auto-section{border-top:1px solid #1b3548;padding:9px 0}.auto-section h3{font-size:11px;letter-spacing:1px;color:#48f5ff;margin:3px 0 8px}
+.auto-section label{margin:8px 0 4px}.auto-section input[type=text],.auto-section input[type=url],.auto-section textarea,.auto-section select{width:100%;padding:8px;background:#030b16;color:#e6faff;border:1px solid #24536a;border-radius:6px;font:inherit}
+.auto-section textarea{resize:vertical}.auto-inline{display:flex;gap:7px;margin-top:7px}.auto-inline>*{flex:1;min-width:0}.auto-inline button{padding:8px;font-size:12px}
+.auto-permission{display:flex;align-items:flex-start;gap:8px;margin:8px 0;color:#c6dce8;font-size:12px}.auto-permission input{width:auto;margin-top:3px}
+.auto-scopes{list-style:none;margin:5px 0;padding:0}.auto-scopes li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid #13283a;font-size:11px;overflow-wrap:anywhere}.auto-scopes button{width:auto;padding:4px 7px;font-size:10px;background:#33202a;border-color:#714350}
+.auto-note{display:block;margin:6px 0;color:#87a9bd;font-size:11px;line-height:1.5}.auto-command{font-family:ui-monospace,SFMono-Regular,monospace!important}
+#autoTaskList,#autoAudit{display:grid;gap:8px}.auto-task{padding:8px;border:1px solid #23485d;border-radius:7px;background:#071827;font-size:12px}.auto-task pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto;color:#b8d5e1;font:11px ui-monospace,monospace;margin:7px 0}.auto-task strong{color:#d9faff}.auto-task small{display:block}.auto-task .auto-inline button{font-size:11px}
+.auto-review{display:flex;align-items:flex-start;gap:7px;margin:8px 0;color:#f2d78d;font-size:11px}.auto-review input{width:auto;margin-top:2px}
+.auto-stop{background:#672b39;border-color:#ad5265}.auto-audit-item{font:10px ui-monospace,monospace;color:#9bb9ca;border-bottom:1px solid #183247;padding:4px 0}
+#forgeToggle{margin-top:8px;background:#133e3d;border-color:#48f5ff;color:#eaffff}
+#forgePanel[hidden]{display:none!important}
+#forgePanel{position:fixed;z-index:11;right:12px;top:76px;width:min(660px,calc(100vw - 24px));max-height:calc(100vh - 90px);overflow:auto;padding:16px;background:#06111ff5;border:1px solid #48f5ff66;border-radius:12px;box-shadow:0 12px 50px #000c;backdrop-filter:blur(14px)}
+.forge-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #1b3548;padding-bottom:10px}.forge-head h2{margin:0;letter-spacing:2px}.forge-head button{width:auto;padding:6px 10px}
+.forge-kicker{display:block;color:#76dce8;font:10px ui-monospace,monospace;letter-spacing:1px}.forge-warning{margin:10px 0;padding:9px;border:1px solid #745b26;border-radius:7px;background:#32270f;color:#f4dda2;font-size:12px;line-height:1.5}
+.forge-section{border-top:1px solid #1b3548;padding:11px 0}.forge-section h3,.forge-section summary{font-size:11px;letter-spacing:1px;color:#48f5ff;margin:3px 0 8px}.forge-section summary{cursor:pointer}.forge-section label{margin:8px 0 4px}.forge-section input[type=text],.forge-section textarea,.forge-section select,.forge-param{width:100%;padding:8px;background:#030b16;color:#e6faff;border:1px solid #24536a;border-radius:6px;font:inherit}.forge-section textarea{resize:vertical}.forge-row{display:flex;gap:8px;margin-top:8px}.forge-row>*{flex:1;min-width:0}.forge-row button{padding:9px;font-size:12px}.forge-consent{display:flex;gap:8px;align-items:flex-start;margin:10px 0;color:#c9e6ed;font-size:11px;line-height:1.5}.forge-consent input{width:auto;margin-top:3px}.forge-consent label{margin:0}.forge-param-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.forge-param-grid label{margin:4px 0;font-size:10px}.forge-viewport{height:320px;position:relative;background:radial-gradient(ellipse at center,#102a39,#030912 70%);border:1px solid #1b5264;border-radius:9px;overflow:hidden}.forge-viewport canvas{width:100%;height:100%;touch-action:none}.forge-controls{display:flex;gap:6px;margin-top:7px}.forge-controls button{padding:8px;font-size:11px}.forge-status{padding:8px;border-radius:6px;background:#071827;color:#b9d8e1;font-size:11px;line-height:1.55;white-space:pre-wrap}.forge-status[data-state="error"]{border:1px solid #ad5265;color:#ffd6dc}.forge-status[data-state="ok"]{border:1px solid #328878;color:#c9ffef}.forge-material{font-size:11px;line-height:1.6;color:#bed5df}.forge-material a{color:#64e9ff}.forge-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}.forge-metric{padding:8px;background:#071827;border:1px solid #18384a;border-radius:6px}.forge-metric strong{display:block;color:#48f5ff;font:12px ui-monospace,monospace}.forge-metric span{font-size:10px;color:#9bb9ca}.forge-export{background:#07536a}.forge-export:disabled{background:#26313a}.forge-muted{color:#92afbd;font-size:10px;line-height:1.5}.forge-checks{margin:5px 0;padding-left:17px;color:#b8d6df;font-size:11px;line-height:1.6}
+#osceToggle{margin-top:8px;background:#102f47;border-color:#61d7f1;color:#eaffff}
+#oscePanel[hidden]{display:none!important}
+#oscePanel{position:fixed;z-index:12;right:12px;top:76px;width:min(860px,calc(100vw - 24px));max-height:calc(100vh - 90px);overflow:auto;padding:16px;background:#06111ff7;border:1px solid #55c9e8;border-radius:12px;box-shadow:0 12px 50px #000c;backdrop-filter:blur(14px)}
+.osce-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #1b3548;padding-bottom:10px}.osce-head h2{margin:0;letter-spacing:1.3px}.osce-head button{width:auto;padding:7px 12px}
+.osce-kicker{display:block;color:#78d8eb;font:10px ui-monospace,monospace;letter-spacing:1px}.osce-warning{margin:10px 0;padding:10px;border:1px solid #745b26;border-radius:7px;background:#32270f;color:#f4dda2;font-size:12px;line-height:1.55}
+.osce-progress-wrap{display:flex;align-items:center;gap:10px;color:#a9c4d1;font-size:11px}.osce-progress-wrap progress{width:min(180px,35vw);height:10px;accent-color:#48f5ff}
+.osce-progress-wrap button{width:auto;flex:0 0 auto;padding:7px 9px;font-size:10px}
+.osce-layout{display:flex;align-items:flex-start;gap:14px;margin-top:12px}.osce-nav{width:205px;flex:none;display:grid;gap:7px}.osce-nav-button{padding:9px;text-align:left;background:#071827;border-color:#224459}.osce-nav-button.is-active{border-color:#48f5ff;box-shadow:inset 3px 0 #48f5ff}.osce-nav-button span{color:#48f5ff;font:11px ui-monospace,monospace}.osce-nav-button strong,.osce-nav-button small{display:block;margin-top:4px}.osce-nav-button small{color:#91aebe;font-size:10px;font-weight:400;line-height:1.4}
+.osce-content{flex:1;min-width:0}.osce-station-card{padding:12px;background:#071827;border:1px solid #1b3b4e;border-radius:9px}.osce-station-card h3{margin:5px 0 12px;color:#e5fbff;font-size:19px}.osce-objective,.osce-case,.osce-task,.osce-model,.osce-answer{margin:8px 0;padding:9px;border-left:2px solid #23829a;background:#061321;color:#c5dce5;font-size:12px;line-height:1.55}.osce-case{border-left-color:#b7903f}.osce-objective strong,.osce-case strong,.osce-task strong{color:#74dcec;font-size:10px;letter-spacing:.8px}.osce-station-card p{margin:5px 0}.osce-label{margin:10px 0 5px}.osce-station-card textarea,.osce-station-card select,.osce-edit-item input,.osce-edit-item textarea{width:100%;padding:9px;background:#030b16;color:#e6faff;border:1px solid #24536a;border-radius:6px;font:inherit}.osce-station-card textarea{resize:vertical}.osce-start{margin-top:8px;background:#07536a}.osce-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.osce-actions button{flex:1 1 180px;padding:9px}.osce-secondary{background:#122637;border-color:#365b70}
+.osce-chart{margin:10px 0;padding:8px;border:1px solid #234459;border-radius:7px;background:#04101c}.osce-chart svg{display:block;width:100%;max-height:250px}.osce-chart-axis{fill:none;stroke:#8bb4c2;stroke-width:2}.osce-chart-guide{stroke:#244d60;stroke-dasharray:5 5}.osce-chart-curve{fill:none;stroke:#48f5ff;stroke-width:4;stroke-linecap:round}.osce-chart text{fill:#bfd6df;font:12px system-ui,sans-serif}.osce-chart figcaption{color:#e5cf8e;font-size:10px;line-height:1.45}
+.osce-rubric,.osce-sources,.osce-teacher{margin-top:12px;padding-top:10px;border-top:1px solid #1b3548}.osce-rubric h4,.osce-sources h4{margin:2px 0 7px;color:#48f5ff;font-size:11px;letter-spacing:.8px}.osce-muted{color:#91afbd;font-size:10px;line-height:1.5}.osce-rubric-list{display:grid;gap:7px}.osce-criterion{min-width:0;margin:0;padding:8px;border:1px solid #234459;border-radius:7px}.osce-criterion legend{padding:0 4px;color:#e2f6fb;font-size:12px;font-weight:700}.osce-criterion p{margin:2px 0 7px;color:#a9c3ce;font-size:10px;line-height:1.45}.osce-rating{display:flex;flex-wrap:wrap;gap:6px}.osce-rating label{display:flex;align-items:center;gap:4px;margin:0;padding:4px 7px;border:1px solid #203e50;border-radius:5px;color:#bcd0d9;font-size:10px}.osce-rating input{width:auto;margin:0}.osce-score{display:grid;gap:3px;margin-top:9px;padding:9px;border:1px solid #328878;border-radius:7px;background:#0b2827;color:#c9ffef;font-size:12px}.osce-score span{font-size:10px;color:#a7d2c7}.osce-timer{display:flex;align-items:center;justify-content:space-between;margin:10px 0;padding:8px;border:1px solid #225167;border-radius:6px;background:#061321;color:#9fbac7;font-size:11px}.osce-timer strong{color:#48f5ff;font:20px ui-monospace,monospace}.osce-sources ul{list-style:none;padding:0;margin:5px 0}.osce-sources li{display:grid;gap:2px;padding:6px 0;border-top:1px solid #142c3e;font-size:10px}.osce-sources a{color:#6be6f6}.osce-sources span{color:#90aebb}.osce-teacher summary{cursor:pointer;color:#e8cd83;font-size:10px;font-weight:700}.osce-edit-item{margin:7px 0;padding:8px;border:1px solid #3c4050;border-radius:6px}.osce-edit-item label{margin:5px 0;color:#c0d2da;font-size:10px}.osce-edit-item input,.osce-edit-item textarea{margin-top:4px;font-size:11px}.osce-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:760px){main{grid-template-columns:1fr;height:auto;min-height:0}#stage{height:55vh;min-height:390px}aside{border:0;overflow:visible}}
+@media(max-width:700px){.osce-layout{display:block}.osce-nav{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:10px}.osce-nav-button{padding:7px}.osce-nav-button strong{font-size:10px}.osce-nav-button small{font-size:9px}}
+@media(max-width:560px){#forgePanel{right:6px;top:70px;width:calc(100vw - 12px);max-height:calc(100vh - 78px);padding:11px}.forge-param-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.forge-viewport{height:270px}.forge-controls{flex-wrap:wrap}.forge-controls button{flex:1 1 30%}#oscePanel{right:6px;top:70px;width:calc(100vw - 12px);max-height:calc(100vh - 78px);padding:10px}.osce-progress-wrap{flex-wrap:wrap}.osce-progress-wrap button{margin-left:auto}.osce-nav{gap:4px}.osce-nav-button span{font-size:9px}.osce-nav-button strong{font-size:9px}.osce-nav-button small{display:none}.osce-station-card{padding:9px}.osce-rating label{flex:1 1 30%}}
+
+/* CYBER OCEAN · connected-mesh presentation */
+html,body{width:100%;height:100%;overflow:hidden;background:#020a18}
+body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d9faff}
+body>header{position:absolute;z-index:7;top:14px;left:22px;padding:0;border:0;pointer-events:none;background:transparent}
+body>header h1{font-size:13px;letter-spacing:3px;color:#76eaff;text-shadow:0 0 14px #00d9ff66}
+body>header p{margin:3px 0 0;color:#5b8194;font-size:8px;letter-spacing:1px}
+main{position:relative;display:block;width:100%;height:100vh;height:100dvh;min-height:540px;overflow:hidden;background:radial-gradient(ellipse at 51% 49%,#0b2840 0%,#061423 48%,#020812 100%)}
+#stage{position:absolute;inset:0;min-height:0;overflow:hidden}
+#stage canvas{width:100%;height:100%;touch-action:none;outline:none}
+#hint{position:absolute;z-index:5;left:24px;bottom:52px;color:#75a9ba;font:9px ui-monospace,monospace;letter-spacing:.5px;text-shadow:0 1px 8px #000;pointer-events:none}
+#cyberHud{position:absolute;inset:0;z-index:3;pointer-events:none;color:#a9d7e4}
+.hud-frame{position:absolute;inset:10px 12px;border:1px solid #19dfff38;box-shadow:inset 0 0 26px #052b3b40}
+.hud-frame:before,.hud-frame:after{content:"";position:absolute;width:28px;height:28px;border-color:#16e6f3;border-style:solid;filter:drop-shadow(0 0 6px #00ddff88)}
+.hud-frame:before{left:3px;top:3px;border-width:2px 0 0 2px}.hud-frame:after{right:3px;top:3px;border-width:2px 2px 0 0}
+.cyber-brand{position:absolute;top:20px;left:50%;transform:translateX(-50%);padding:7px 24px;border:1px solid #14718a77;border-radius:22px;background:#031321d9;color:#c4f8ff;font-size:12px;font-weight:700;letter-spacing:5px;white-space:nowrap;text-shadow:0 0 12px #22deff6b}
+.cyber-brand small{display:block;margin-top:3px;color:#56a9bc;font:8px ui-monospace,monospace;letter-spacing:2px;text-align:center}
+.brand-dot{display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:#20ebf6;box-shadow:0 0 9px #20ebf6}
+.telemetry-panel{position:absolute;left:26px;top:28%;width:174px;padding:13px 14px;border:1px solid #14c9e56b;border-left:2px solid #25e4f1;background:#041220d9;box-shadow:0 8px 28px #0007;backdrop-filter:blur(5px)}
+.panel-title{padding-bottom:8px;border-bottom:1px solid #1a5363;color:#70e9f5;font-size:9px;letter-spacing:2px}
+.telemetry-row{display:flex;flex-direction:column;gap:2px;padding:7px 0 5px;border-bottom:1px solid #153145}
+.telemetry-row span{color:#668c9e;font-size:8px;letter-spacing:1.4px}
+.telemetry-row strong{color:#37dff1;font-size:15px;font-weight:500;text-shadow:0 0 10px #0ac5e343}
+.telemetry-row:last-child{border-bottom:0}
+.hud-bottom{position:absolute;left:22%;right:23%;bottom:22px;display:flex;justify-content:space-between;gap:14px;padding:8px 11px;border-top:1px solid #13728669;color:#5e9aae;font-size:8px;letter-spacing:1px;background:linear-gradient(90deg,transparent,#031424ac,transparent)}
+#hudStatus{color:#62e8d5}
+aside{position:absolute;z-index:8;top:84px;right:24px;bottom:58px;width:min(280px,24vw);min-height:0;padding:15px 16px;overflow:auto;border:1px solid #138da582;border-left:2px solid #18d7e8;border-radius:2px;background:#041321e8;box-shadow:0 10px 38px #0009;backdrop-filter:blur(12px);scrollbar-color:#13758b #06101a}
+aside>h2{color:#54dfed;font:10px ui-monospace,monospace;letter-spacing:1.6px}
+aside label{margin:11px 0 4px;color:#91b8c7;font:10px ui-monospace,monospace}
+aside input[type=range]{height:14px;accent-color:#22e2f0}
+aside input[type=color]{width:100%;height:31px;padding:3px;background:#061522;border:1px solid #1c6073;border-radius:3px}
+aside textarea,aside select{background:#03101d;border-color:#16465b;border-radius:3px;font:11px ui-monospace,monospace}
+aside button{border-radius:3px;font:10px ui-monospace,monospace;letter-spacing:.3px}
+aside button:hover{border-color:#2be6f0;box-shadow:0 0 12px #15c9de31}
+#meshControls{margin:-1px -2px 14px;padding:0 0 11px;border-bottom:1px solid #1b4658}
+#meshControls h2{margin:0 0 8px}
+.hud-checkbox{display:flex;align-items:center;gap:7px!important;margin:8px 0!important;color:#b6dbe5!important}
+.hud-checkbox input{width:auto;accent-color:#20e1ef}
+.mesh-action-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:7px 0}
+.mesh-action-row button{padding:8px 4px;background:#082d3d;border-color:#17667c}
+.telemetry-row output,output{color:#57e4ef}
+#visualExamples,#visualCalibration,#visualHelp,#chemistry-tools,.stats{border-color:#164053}
+#visualExamples p,.visual-calibration-note,.visual-help-answer{font:10px/1.55 ui-monospace,monospace}
+#chemistry-tools details{color:#acc9d3;font-size:10px}
+#reply{padding:8px;background:#061522a8;border-left:1px solid #178ca1;font:10px/1.5 ui-monospace,monospace}
+@media(max-width:760px){
+ html,body{overflow:hidden}main{height:100dvh;min-height:540px}#stage{height:100%;min-height:0}
+ body>header{top:10px;left:12px}body>header p{display:none}.cyber-brand{top:13px;font-size:10px;padding:6px 16px}
+ .hud-frame{inset:7px}.telemetry-panel{top:19%;left:12px;width:142px;padding:9px 10px}.telemetry-row{padding:5px 0}.telemetry-row strong{font-size:12px}
+ .hud-bottom{left:12px;right:12px;bottom:43vh;gap:6px;font-size:7px;flex-wrap:wrap}
+ #hint{left:12px;bottom:44vh;font-size:8px}
+ aside{top:auto;left:12px;right:12px;bottom:10px;width:auto;max-height:41vh;padding:11px 13px;background:#041321f2}
+ #meshControls{display:grid;grid-template-columns:1fr 1fr;column-gap:10px}#meshControls h2,.mesh-action-row,.hud-checkbox{grid-column:1/-1}
+ #meshControls label{margin:6px 0 2px}
+}
+@media(max-width:430px){.telemetry-panel{width:126px}.telemetry-row span{font-size:7px}.cyber-brand{left:57%;letter-spacing:3px}.hud-bottom{left:8px;right:8px}}
+
+</style>
+</head>
+<body>
+<header>
+<h1>GRID SOUL</h1>
+<p>MALHA 3D · TRIÂNGULOS CONECTADOS · AMBIENTE OCEÂNICO</p>
+</header>
+<main>
+<section id="stage">
+<div id="cyberHud" aria-hidden="false">
+  <div class="hud-frame" aria-hidden="true"></div>
+  <div class="cyber-brand"><span class="brand-dot"></span> CYBER OCEAN <small>GRID SOUL · CONNECTED MESH</small></div>
+  <section class="telemetry-panel" aria-label="Telemetria real da malha">
+    <div class="panel-title"><span class="brand-dot"></span> TELEMETRY</div>
+    <div class="telemetry-row"><span>OBJECT</span><strong id="hudShape">SHARK</strong></div>
+    <div class="telemetry-row"><span>TRIANGLES</span><strong id="hudTriangles">—</strong></div>
+    <div class="telemetry-row"><span>VERTICES</span><strong id="hudVertices">—</strong></div>
+    <div class="telemetry-row"><span>CONNECTED COMPONENTS</span><strong id="hudComponents">—</strong></div>
+    <div class="telemetry-row"><span>DEPTH</span><strong id="hudDepth">—</strong></div>
+    <div class="telemetry-row"><span>ROTATION</span><strong id="hudRotation">—</strong></div>
+    <div class="telemetry-row"><span>SESSION</span><strong id="hudSession">00:00</strong></div>
+    <div class="telemetry-row"><span>RENDER</span><strong id="hudFps">— FPS</strong></div>
+  </section>
+  <div class="hud-bottom"><span id="hudStatus">SYSTEM READY · WebGL</span><span>DRAG · ORBIT</span><span>SCROLL · ZOOM</span><span>RIGHT DRAG · PAN</span></div>
+</div>
+<div id="hint">Arraste para orbitar · Scroll para aproximar · arraste com botão direito para mover</div>
+<section id="sceneEditorPanel" aria-label="Editor de cena 3D" hidden>
+  <div class="editor-head"><div><small>GRID SOUL · WORKSPACE 3D</small><h2>EDITOR DE CENA</h2></div><button id="editorClose" type="button">Fechar</button></div>
+  <div class="editor-toolbar"><button id="editorUndo" type="button" disabled>Desfazer</button><button id="editorRedo" type="button" disabled>Refazer</button><button id="editorDuplicate" type="button">Duplicar</button><button id="editorDelete" type="button">Excluir</button><button id="editorSave" type="button">Salvar JSON</button><button id="editorLoad" type="button">Abrir JSON</button></div>
+  <input id="editorFile" type="file" accept="application/json,.json" hidden>
+  <section class="editor-section"><h3>ADICIONAR À CENA</h3><div class="editor-add-grid">
+    <button data-editor-add="box" type="button">Cubo</button><button data-editor-add="sphere" type="button">Esfera</button><button data-editor-add="cylinder" type="button">Cilindro</button><button data-editor-add="cone" type="button">Cone</button><button data-editor-add="torus" type="button">Toro</button><button data-editor-add="plane" type="button">Plano</button><button data-editor-add="icosahedron" type="button">Icosaedro</button><button data-editor-add="point-light" type="button">Luz pontual</button>
+  </div></section>
+  <section class="editor-section"><h3>HIERARQUIA</h3><div id="editorTree" role="tree"></div></section>
+  <section class="editor-section"><h3>FERRAMENTA</h3><div class="editor-mode-row"><button type="button" data-editor-mode="translate" aria-pressed="true">Mover</button><button type="button" data-editor-mode="rotate" aria-pressed="false">Rotacionar</button><button type="button" data-editor-mode="scale" aria-pressed="false">Escalar</button></div></section>
+  <section class="editor-section"><h3>INSPETOR</h3><div id="editorInspector"><span id="editorSelection" class="editor-inspector-title">Nenhum objeto selecionado</span><label>Nome<input id="editorName" type="text" maxlength="80" disabled></label><label>Cor<input id="editorColor" type="color" value="#20dfff" disabled></label>
+    <label>Posição X<input type="number" step="0.1" data-editor-transform="position-x" disabled></label><label>Posição Y<input type="number" step="0.1" data-editor-transform="position-y" disabled></label><label>Posição Z<input type="number" step="0.1" data-editor-transform="position-z" disabled></label><label>Rotação X °<input type="number" step="1" data-editor-transform="rotation-x" disabled></label><label>Rotação Y °<input type="number" step="1" data-editor-transform="rotation-y" disabled></label><label>Rotação Z °<input type="number" step="1" data-editor-transform="rotation-z" disabled></label><label>Escala X<input type="number" min="0.01" max="100" step="0.1" data-editor-transform="scale-x" disabled></label><label>Escala Y<input type="number" min="0.01" max="100" step="0.1" data-editor-transform="scale-y" disabled></label><label>Escala Z<input type="number" min="0.01" max="100" step="0.1" data-editor-transform="scale-z" disabled></label><div class="editor-inline"><input id="editorVisible" type="checkbox" checked disabled><label for="editorVisible">Visível</label></div>
+  </div></section>
+  <section class="editor-section"><h3>CRIAR COM IA · CHATGPT</h3><textarea id="editorAiPrompt" rows="2" maxlength="1200" placeholder="Descreva o modelo que a IA deve criar ou modificar…"></textarea><button id="editorAI" type="button">Pedir criação à IA</button><small>A IA usa a ponte local existente e o catálogo seguro de modelos. Não executa código arbitrário; a resposta atual altera a malha principal.</small></section>
+  <output id="editorStatus" role="status" aria-live="polite">Editor pronto. Selecione ou adicione um objeto.</output>
+</section>
+</section>
+<aside>
+<button id="editorOpen" type="button" aria-controls="sceneEditorPanel">Abrir editor 3D</button>
+<section id="meshControls" aria-labelledby="meshControlsHeading">
+  <h2 id="meshControlsHeading">CONTROLS · MALHA</h2>
+  <label for="meshColor">Cor do wireframe</label><input id="meshColor" type="color" value="#19dff6">
+  <label for="meshIntensity">Intensidade <output id="meshIntensityOut">1,00</output></label><input id="meshIntensity" type="range" min="0.1" max="2.5" step="0.05" value="1">
+  <label class="hud-checkbox" for="meshSurfaceToggle"><input id="meshSurfaceToggle" type="checkbox" checked> Mostrar superfície sombreada</label>
+  <label class="hud-checkbox" for="meshWireframeToggle"><input id="meshWireframeToggle" type="checkbox" checked> Mostrar wireframe</label>
+  <div class="mesh-action-row"><button id="meshPause" type="button" aria-pressed="false">Pausar animação</button><button id="meshResetCamera" type="button">Enquadrar</button></div>
+  <label for="meshPosX">Posição X <output id="meshPosXOut">0,00</output></label><input id="meshPosX" type="range" min="-3" max="3" step="0.05" value="0">
+  <label for="meshPosY">Posição Y <output id="meshPosYOut">0,00</output></label><input id="meshPosY" type="range" min="-3" max="3" step="0.05" value="0">
+  <label for="meshPosZ">Posição Z <output id="meshPosZOut">0,00</output></label><input id="meshPosZ" type="range" min="-3" max="3" step="0.05" value="0">
+</section>
+<h2>CRIAR · CYBER OCEAN</h2>
+<textarea id="command" rows="4" maxlength="1200"
+placeholder="Ex.: transforme-se em uma espiral, expanda e gire para a direita."></textarea>
+<button id="send" style="margin-top:9px">Enviar ao ChatGPT</button>
+<button id="openShowcase" type="button">Abrir demonstração CYBER OCEAN</button>
+<button id="automationToggle" type="button" aria-expanded="false" aria-controls="automationPanel">Abrir agente de automação local</button>
+<button id="forgeToggle" type="button" aria-expanded="false" aria-controls="forgePanel">Abrir Atomic Forge 3D</button>
+<button id="osceToggle" type="button" aria-expanded="false" aria-controls="oscePanel">Treino OSCE · Neurovascular</button>
+<section id="visualExamples" aria-labelledby="visualExamplesHeading">
+<h2 id="visualExamplesHeading">EXEMPLOS RÁPIDOS · PRÉVIA LOCAL</h2>
+<p>Estes botões geram formas no próprio navegador; não enviam o pedido ao ChatGPT.</p>
+<div class="visual-example-grid">
+<button class="visual-example" type="button" data-visual-example="shark"><strong>Tubarão</strong><small>Malha animal conectada</small></button>
+<button class="visual-example" type="button" data-visual-example="heart"><strong>Coração</strong><small>Superfície volumétrica</small></button>
+<button class="visual-example" type="button" data-visual-example="skull"><strong>Crânio</strong><small>Volume anatômico estilizado</small></button>
+<button class="visual-example" type="button" data-visual-example="sphere"><strong>Esfera</strong><small>Superfície triangulada</small></button>
+<button class="visual-example" type="button" data-visual-example="torus"><strong>Toro</strong><small>Anel tridimensional</small></button>
+<button class="visual-example" type="button" data-visual-example="spiral"><strong>Espiral</strong><small>Curva volumétrica</small></button>
+<button class="visual-example" type="button" data-visual-example="wave"><strong>Onda</strong><small>Superfície senoidal</small></button>
+<button class="visual-example" type="button" data-visual-example="terrain"><strong>Terreno</strong><small>Relevo procedural</small></button>
+<button class="visual-example" type="button" data-visual-example="face"><strong>Rosto · malha</strong><small>Superfície frontal estilizada</small></button>
+</div>
+</section>
+<div id="reply" aria-live="polite">Inicializando a entidade...</div>
+
+<section id="visualCalibration" aria-labelledby="visualCalibrationHeading">
+<h2 id="visualCalibrationHeading">MALHA E AUTO-CALIBRAÇÃO</h2>
+<label class="visual-auto-label" for="visualAuto"><input id="visualAuto" type="checkbox" checked> Ajustar automaticamente a cada pedido</label>
+<button id="visualRecalibrate" type="button">Recalibrar e enquadrar a forma</button>
+<small class="visual-calibration-note">Ajusta densidade geométrica, escala e enquadramento; o HUD mede a contagem real de triângulos e o FPS renderizado.</small>
+<small id="visualCalibrationStatus" role="status" aria-live="polite">Auto ligado · faça um pedido ou escolha um exemplo local.</small>
+</section>
+
+<label for="population">Densidade da malha <output id="popout">36/64</output></label>
+<input id="population" type="range" min="12" max="64" step="1" value="36">
+
+<label for="energy">Velocidade de animação <output id="energyout">0.28</output></label>
+<input id="energy" type="range" min="0" max="1" step=".01" value=".28">
+
+<label for="visualScale">Escala visual <output id="visualScaleOut">2,0×</output></label>
+<input id="visualScale" type="range" min="0.5" max="8" step="0.01" value="2">
+
+<section id="chemistry-tools" aria-labelledby="chemistry-heading">
+<h2 id="chemistry-heading">CATÁLOGO PERIÓDICO · METADADOS</h2>
+<label for="paletteMode">Paleta do wireframe</label>
+<select id="paletteMode">
+<option value="chemical">Ciano (padrão)</option>
+<option value="single">Cor única</option>
+<option value="rainbow">Arco-íris</option>
+<option value="plasma">Plasma</option>
+<option value="fire">Fogo</option>
+<option value="green">Verde</option>
+<option value="cyan">Ciano / azul</option>
+
+</select>
+<small id="focusNotice" aria-live="polite">O catálogo contém metadados independentes dos vértices da malha.</small>
+<details open>
+<summary>Explorar / destacar um elemento</summary>
+<div class="periodic-wrap"><div id="elementCatalog" class="periodic-grid" role="grid" aria-label="Catálogo dos 118 elementos químicos"></div></div>
+<button id="clearElementFocus" type="button">Mostrar todos os elementos</button>
+</details>
+</section>
+
+<div class="stats">
+<h2>ESTADO DO RENDERER</h2>
+<small id="state">Iniciando renderer de malha...</small>
+<p><small>O painel informa a topologia produzida (vértices, triângulos e componentes conexos); densidade é resolução geométrica, não quantidade de cubos.</small></p>
+</div>
+
+<details id="visualHelp">
+<summary>FAQ · como usar as ferramentas?</summary>
+<div class="visual-help-item"><h3>Como pedir uma malha?</h3><p class="visual-help-answer">Descreva a forma, cor, densidade, movimento e enquadramento. Ex.: “Crie um tubarão em malha wireframe ciano”. A superfície exibida é uma geometria triangular conectada, não um conjunto de cubos.</p></div>
+<div class="visual-help-item"><h3>O que a auto-calibração altera?</h3><p class="visual-help-answer">Sugere densidade da malha, velocidade de animação e escala e enquadra a câmera. Os controles manuais preservam seus valores; marque Auto e recalcule para retornar às sugestões.</p></div>
+<div class="visual-help-item"><h3>Como ajustar o wireframe?</h3><p class="visual-help-answer">Use o seletor de cor, intensidade e alternância de superfície sombreada. Arraste para orbitar, role para aproximar, use o botão direito para pan; a posição X/Y/Z também pode ser alterada no painel.</p></div>
+<div class="visual-help-item"><h3>Os exemplos usam IA?</h3><p class="visual-help-answer">Não. Tubarão, coração, crânio, esfera, onda e rosto são gerados localmente como geometrias 3D trianguladas; os contadores mostram os valores reais da malha gerada.</p></div>
+<div class="visual-help-item"><h3>Para que servem Atomic Forge e OSCE?</h3><p class="visual-help-answer">Atomic Forge constrói o garfo paramétrico disponível e exporta STL/JSON/relatório dentro dos limites descritos no painel. OSCE é um treino educacional fictício de fisiologia neurovascular, sem diagnóstico nem uso de dados de pacientes.</p></div>
+<div class="visual-help-item"><h3>Como funciona o agente local?</h3><p class="visual-help-answer">Ele começa sem permissões. Conceda apenas a categoria, pasta ou origem necessárias; navegação e operações sensíveis pedem confirmações próprias. Abrir um site não autoriza ações ilimitadas nele.</p></div>
+</details>
+</aside>
+</main>
+<section id="automationPanel" role="dialog" aria-label="Agente de automação local" hidden>
+  <div class="auto-head"><h2>AGENTE LOCAL · CONTROLES</h2><button id="automationClose" type="button" aria-label="Fechar painel">Fechar</button></div>
+  <p class="auto-warning">Acesso desativado por padrão. Autorize cada categoria e escopo. Cada navegação, leitura de texto, preenchimento, clique e mutação de arquivo pede aprovação própria. Dados e auditoria permanecem neste computador.</p>
+  <section class="auto-section"><h3>PERMISSÕES E ESCOPO</h3><div id="autoPermissions"></div>
+    <label for="autoRoot">Pasta específica para arquivos e comandos de arquivo</label><input id="autoRoot" type="text" placeholder="Ex.: /home/usuario/Documentos">
+    <button id="autoGrantRoot" type="button">Autorizar esta pasta</button><ul id="autoRoots" class="auto-scopes"></ul>
+    <label for="autoOrigin">Origem HTTPS exata para Playwright</label><input id="autoOrigin" type="url" placeholder="https://gemini.google.com">
+    <button id="autoGrantOrigin" type="button">Autorizar esta origem</button><ul id="autoOrigins" class="auto-scopes"></ul>
+    <small class="auto-note" id="autoBrowserMode"></small>
+  </section>
+  <details class="auto-section" open><summary>TERMINAL INTEGRADO</summary><small class="auto-note">CLI sem shell arbitrário: pwd, date, whoami, uname, ls, cat, head, tail, grep literal, git status/log/diff --stat e consultas de versão. Comandos de arquivo ficam restritos às pastas Files; consultas básicas de ambiente usam o processo local. Saída máxima: 20 KiB. O terminal nativo inicia na raiz Files concedida ou na pasta do projeto e fica fora dos filtros.</small>
+    <label for="autoCommand">Comando permitido</label><input id="autoCommand" class="auto-command" type="text" placeholder="Ex.: ls -la">
+    <div class="auto-inline"><button id="autoRunCommand" type="button">Executar</button><button id="autoOpenTerminal" type="button">Abrir terminal nativo</button></div>
+  </details>
+  <details class="auto-section"><summary>ARQUIVOS</summary><small class="auto-note">Leituras e escritas de texto têm limite de 256 KiB. Operações de criação, atualização, movimentação e exclusão aguardam aprovação.</small>
+    <label for="autoFileAction">Operação</label><select id="autoFileAction"><option value="list">Listar pasta</option><option value="read">Ler texto</option><option value="create">Criar arquivo</option><option value="write">Atualizar arquivo</option><option value="mkdir">Criar pasta</option><option value="rename">Mover/renomear</option><option value="delete">Excluir arquivo</option></select>
+    <label for="autoFilePath">Caminho (relativo à pasta concedida ou absoluto dentro dela)</label><input id="autoFilePath" type="text" placeholder="notas.txt">
+    <label for="autoFileDestination">Destino (para mover/renomear)</label><input id="autoFileDestination" type="text" placeholder="notas-antigas.txt">
+    <label for="autoFileContent">Conteúdo (para criar/atualizar)</label><textarea id="autoFileContent" rows="3" maxlength="262144" placeholder="Texto a gravar após aprovação explícita"></textarea>
+    <button id="autoFileSubmit" type="button">Executar operação</button>
+  </details>
+  <details class="auto-section"><summary>NAVEGADOR PLAYWRIGHT ISOLADO</summary>
+    <small class="auto-note">Contexto temporário sem importar cookies/perfis existentes e sem ler credenciais armazenadas. “Ler texto visível” pode mostrar dados pessoais ou credenciais já exibidos e exige aprovação; o texto fica em memória/API por até 60 s e não entra na auditoria. Navegação GET pode ter efeitos remotos e exige aprovação por URL. Nunca preenche campos de senha/arquivo ou identificadores sensíveis. Login é manual com GRID_SOUL_AUTOMATION_HEADLESS=0; cada origem deve ser autorizada. Texto da página: até 5.000 caracteres.</small>
+    <label for="autoUrl">URL HTTPS de navegação</label><input id="autoUrl" type="url" placeholder="https://chatgpt.com/">
+    <button id="autoNavigate" type="button">Abrir página autorizada</button>
+    <div class="auto-inline"><button id="autoReadPage" type="button">Ler texto visível</button><button id="autoCloseBrowser" type="button">Fechar navegador</button></div>
+    <label for="autoField">Campo acessível/placeholder</label><input id="autoField" type="text" placeholder="Pesquisar">
+    <label for="autoValue">Texto para preencher (sempre pede aprovação)</label><textarea id="autoValue" rows="2" maxlength="5000"></textarea>
+    <button id="autoFill" type="button">Preencher campo</button>
+    <label for="autoClickRole">Controle do clique</label><select id="autoClickRole"><option value="button">Botão</option><option value="link">Link</option></select>
+    <input id="autoClickTarget" type="text" placeholder="Nome acessível exato">
+    <button id="autoClick" type="button">Solicitar clique (aprovação obrigatória)</button>
+  </details>
+  <details class="auto-section"><summary>INICIAR PROGRAMA</summary><div class="auto-inline"><button type="button" data-auto-app="browser">Navegador (GRID SOUL)</button><button type="button" data-auto-app="calculator">Calculadora</button><button type="button" data-auto-app="textEditor">Editor</button></div></details>
+  <section class="auto-section"><h3>TAREFAS · APROVAÇÃO · SAÍDA</h3><button id="autoStopAll" class="auto-stop" type="button">INTERROMPER TUDO AGORA</button><div id="autoTaskList" aria-live="polite"></div></section>
+  <details class="auto-section"><summary>AUDITORIA (metadados mínimos)</summary><div id="autoAudit"></div></details>
+</section>
+<section id="forgePanel" role="dialog" aria-label="Atomic Forge 3D — oficina de geometria" hidden>
+  <div class="forge-head"><div><span class="forge-kicker">GRID SOUL · OFICINA LOCAL · MILÍMETROS</span><h2>ATOMIC FORGE 3D</h2></div><button id="forgeClose" type="button" aria-label="Fechar oficina">Fechar</button></div>
+  <p class="forge-warning">Protótipo v1: gera somente um garfo paramétrico. Volume e malha referem-se ao CAD construído; massa é uma estimativa teórica a 100% sólido. Não há FEM, validação alimentar, slicer, impressão física, 3MF nem STEP nesta fatia.</p>
+  <section class="forge-section" aria-labelledby="forge-spec-heading">
+    <h3 id="forge-spec-heading">REQUISITOS E PROPOSTA</h3>
+    <label for="forgeProjectName">Nome do projeto</label><input id="forgeProjectName" type="text" maxlength="80" value="Garfo paramétrico">
+    <label for="forgeDescription">Descreva o objeto e o uso pretendido</label><textarea id="forgeDescription" rows="2" maxlength="1200" placeholder="Ex.: garfo de 190 mm, quatro dentes, para protótipo decorativo"></textarea>
+    <label for="forgePurpose">Uso informado</label><select id="forgePurpose"><option value="prototype">Protótipo não alimentar</option><option value="decorative">Decorativo</option><option value="food-contact">Contato com alimentos (não certificado)</option></select>
+    <div class="forge-consent"><input id="forgeUseAI" type="checkbox"><label for="forgeUseAI">Opcional: pedir uma proposta ao ChatGPT pela ponte existente. A descrição e as dimensões visíveis só serão enviadas após confirmação explícita; nenhum arquivo, pasta ou credencial é anexado.</label></div>
+    <button id="forgeAnalyze" type="button">Analisar descrição localmente</button>
+    <div id="forgeQuestions" class="forge-status" role="status" aria-live="polite">Ajuste os parâmetros ou peça uma proposta. A análise local funciona sem enviar dados.</div>
+  </section>
+  <details class="forge-section" open><summary>PARÂMETROS GEOMÉTRICOS · EDITÁVEIS</summary>
+    <div class="forge-param-grid">
+      <label>Comprimento total · mm<input class="forge-param" data-fork-key="lengthMm" type="number" min="90" max="350" step="1" value="190"></label>
+      <label>Número de pontas<input class="forge-param" data-fork-key="tineCount" type="number" min="2" max="6" step="1" value="4"></label>
+      <label>Comprimento das pontas · mm<input class="forge-param" data-fork-key="tineLengthMm" type="number" min="20" max="80" step="0.5" value="40"></label>
+      <label>Largura de cada ponta · mm<input class="forge-param" data-fork-key="tineWidthMm" type="number" min="1.5" max="5" step="0.1" value="3.2"></label>
+      <label>Vão entre pontas · mm<input class="forge-param" data-fork-key="tineGapMm" type="number" min="1.2" max="5" step="0.1" value="2"></label>
+      <label>Pescoço · mm<input class="forge-param" data-fork-key="neckLengthMm" type="number" min="8" max="25" step="0.5" value="16"></label>
+      <label>Largura do cabo · mm<input class="forge-param" data-fork-key="handleWidthMm" type="number" min="6" max="30" step="0.5" value="13"></label>
+      <label>Largura da extremidade · mm<input class="forge-param" data-fork-key="handleTipWidthMm" type="number" min="4" max="30" step="0.5" value="10"></label>
+      <label>Espessura extrudada · mm<input class="forge-param" data-fork-key="thicknessMm" type="number" min="1.6" max="8" step="0.1" value="3"></label>
+    </div>
+    <button id="forgeBuild" type="button">Construir prévia do sólido</button>
+  </details>
+  <section class="forge-section"><h3>VISTA CAD · SÓLIDO REAL</h3><div class="forge-viewport"><canvas id="forgeCanvas" aria-label="Pré-visualização tridimensional orbitável do garfo"></canvas></div>
+    <div class="forge-controls"><button id="forgeCut" type="button" disabled>Alternar corte</button><button id="forgeLayers" type="button" disabled>Construir por camadas</button><button id="forgeResetView" type="button">Centralizar vista</button></div>
+    <small class="forge-muted">Arraste para orbitar; use a roda para zoom. O corte e a animação operam na geometria CAD mostrada. A camada visual não representa código G.</small>
+  </section>
+  <section class="forge-section"><h3>MATERIAL E EVIDÊNCIA</h3><label for="forgeMaterial">Grade comercial (não elemento químico)</label><select id="forgeMaterial"><option value="">Carregando catálogo verificado…</option></select><div id="forgeMaterialFacts" class="forge-material"></div></section>
+  <section class="forge-section"><h3>MÉTRICAS E VALIDAÇÃO</h3><div id="forgeMetrics" class="forge-metrics"></div><div id="forgeValidation" class="forge-status" role="status" aria-live="polite">Nenhuma geometria construída.</div></section>
+  <section class="forge-section"><h3>EXPORTAÇÃO E RELATÓRIO</h3><div class="forge-row"><button id="forgeExportStl" class="forge-export" type="button" disabled>Exportar STL binário (mm)</button><button id="forgeExportJson" type="button">Baixar projeto JSON</button><button id="forgeExportReport" type="button" disabled>Baixar relatório técnico</button></div><small class="forge-muted">A exportação STL requer confirmação final e verificação local da malha. Fatiador e impressão física não são acionados.</small></section>
+</section>
+<section id="oscePanel" role="dialog" aria-modal="true" aria-label="Treino OSCE de fisiologia neurovascular" tabindex="-1" hidden>
+  <div class="osce-head"><div><span class="osce-kicker">GRID SOUL · SIMULAÇÃO FICTÍCIA · USO EDUCACIONAL</span><h2>LABORATÓRIO NEUROVASCULAR</h2></div><button id="osceClose" type="button" aria-label="Fechar treino OSCE">Fechar</button></div>
+  <p class="osce-warning"><strong>Limite educacional:</strong> não insira dados de pacientes. Casos e gráficos são fictícios/esquemáticos; isto não diagnostica nem recomenda conduta. Respostas ficam apenas na memória desta página e não são enviadas ao ChatGPT nem gravadas.</p>
+  <div class="osce-progress-wrap"><progress id="osceProgress" value="0" max="3"></progress><span id="osceProgressText">0 de 3 autoavaliações concluídas</span><button id="osceTeacherToggle" type="button" aria-pressed="false">Editar rubricas · modo docente local</button></div>
+  <div class="osce-layout"><nav id="osceStationNav" class="osce-nav" aria-label="Estações do OSCE"></nav><div id="osceStationContent" class="osce-content"></div></div>
+  <p id="osceAnnouncement" class="osce-visually-hidden" role="status" aria-live="polite"></p>
+</section>
+<script type="importmap">
+{"imports":{"three":"/vendor/three/build/three.module.js","three/addons/":"/vendor/three/examples/jsm/"}}
+</script>
+<script type="module" src="/app.js"></script>
+<script type="module" src="/automation-ui.js"></script>
+<script type="module" src="/engineering-ui.js"></script>
+<script type="module" src="/neurovascular-osce-ui.js"></script>
+</body>
+</html>

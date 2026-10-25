@@ -1,0 +1,30 @@
+{
+  "name": "gridsoul-evolution",
+  "version": "1.7.0",
+  "description": "GRID SOUL CYBER OCEAN — renderer local de malhas 3D trianguladas conectadas",
+  "main": "server.js",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check server.js && node --check public/app.js && node --check public/components/wireframe_geometry.js && node --check public/components/wireframe_scene.js && node --check public/components/scene_editor.js && node --check public/components/visual_autocalibration.js && node --check chrome-extension/background.js && node --check chrome-extension/content.js && node --check components/material_catalog.js && node --check lib/automation/policy.js && node --check lib/automation/store.js && node --check lib/automation/network-proxy.js && node --check lib/automation/service.js && node --check lib/engineering/assistant.js && node --check public/engineering/fork.js && node --check public/engineering-ui.js && node --check public/automation-ui.js && node --check public/neurovascular-osce.js && node --check public/neurovascular-osce-ui.js && node --test",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "threejs",
+    "connected-mesh",
+    "wireframe",
+    "procedural-geometry",
+    "cyber-ocean"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^2.30.0",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "playwright": "^1.64.1",
+    "three": "0.180.0"
+  }
+}
